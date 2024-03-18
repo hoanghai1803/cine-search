@@ -22,7 +22,7 @@ class Crawler:
 
         self.number_items = 0
         self.last_number_items = 0
-        self.dbUrl = os.getenv('DATABASE_URL')
+        self.dbUrl = os.getenv('DB_CONNECTION_STRING')
 
     def initDB(self):
         self.client = pymongo.MongoClient(self.dbUrl, tlsCAFile=certifi.where())

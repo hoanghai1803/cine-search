@@ -66,12 +66,33 @@ pip install -r requirements.txt
 
 4. Database setup:
 
-Coming soon...
+Use need to crawl data from IMDb to use the application. You should follow and modify the file `cine-search/crawl_data/crawl.py`.
 
-5. Run the application:
+5. Setup the environment variables:
+
+Create a file named `.env` in the root directory of the project and add the following content:
+
+```env
+DB_CONNECTION_STRING=<your_db_connection_string>
+GPT_API_KEY=<your_gpt_api_key>
+```
+
+6. Run the application:
 
 ```bash
 streamlit run app.py
 ```
+
+## Screenshots
+
+The application will show top 20 movies and TV shows by default.
+
+Query: "Người dơi"
+
+![Batman](https://i.imgur.com/ZeQV3Nu.png)
+
+Query: "Người nhện"
+
+![SpiderMan](https://i.imgur.com/NkORQH5.png)
 
 Have the best experience with our project!
