@@ -17,23 +17,15 @@ load_dotenv()
 
 class Crawler:
 
-    def __init__(self, mongoConfig = None):
+    def __init__(self):
         self.results = []
 
         self.number_items = 0
         self.last_number_items = 0
-        if mongoConfig is not None:
-            self.mongoConfig = mongoConfig
-        else:
-            self.mongoConfig = {'username': os.getenv('USERNAME'), 'password': os.getenv('PASSWORD'), 'cluster': os.getenv('CLUSTER'), 'options': {'retryWrites': 'true', 'w': 'majority'}}
+        self.dbUrl = os.getenv('DATABASE_URL')
 
     def initDB(self):
-        username = self.mongoConfig['username']
-        password = self.mongoConfig['password']
-        cluster = self.mongoConfig['cluster']
-        options = '&'.join([f"{key}={value}" for key, value in self.mongoConfig['options'].items()])
-
-        self.client = pymongo.MongoClient(f"mongodb+srv://{username}:{password}@{cluster}/?{options}", tlsCAFile=certifi.where())
+        self.client = pymongo.MongoClient(self.dbUrl, tlsCAFile=certifi.where())
         self.db = self.client["movies_data"]
 
         self.movies_col = self.db['movies']
