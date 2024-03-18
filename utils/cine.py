@@ -6,6 +6,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 class Cine:
+
     def __init__(self, collection):
         """
         Cine class for searching movies.
@@ -37,7 +38,7 @@ class Cine:
             self,
             query: str,
             num_extend_terms: int = 5
-    ):
+    ) -> str:
         """
         Extend the query with relative terms from the collection, based on cosine similarity.
         :param query:
@@ -87,6 +88,33 @@ class Cine:
 
         return results
 
+    def _bonus_score_for_contiguous_tokens(self, top_movies, query):
+        tokens = self.tokenizer.tokenize_text(query)
+        score_increase_factor = 0.75
+        new_top_movies = []
+        for movie_id, score in top_movies:
+            movie_title = self.titles[self.movies_id.index(movie_id)]
+            normalized_movie_title = ' '.join(self.tokenizer.tokenize_text(movie_title))
+            for length in range(2, len(tokens) + 1):
+                for i in range(len(tokens) - length + 1):
+                    contiguous_tokens = ' '.join(tokens[i:i + length])
+                    if contiguous_tokens in normalized_movie_title:
+                        score += length * score_increase_factor * 3
+
+            movie_description = self.descriptions[self.movies_id.index(movie_id)]
+            normalized_movie_description = ' '.join(self.tokenizer.tokenize_text(movie_description))
+            for length in range(2, len(tokens) + 1):
+                for i in range(len(tokens) - length + 1):
+                    contiguous_tokens = ' '.join(tokens[i:i + length])
+                    if contiguous_tokens in normalized_movie_description:
+                        score += length * score_increase_factor
+
+            new_top_movies.append((movie_id, score))
+
+        # Sort the top movies by score
+        new_top_movies.sort(key=lambda x: x[1], reverse=True)
+        return new_top_movies
+
     def cine_search(
         self,
         query: str,
@@ -99,19 +127,25 @@ class Cine:
 
         results = self._search(query)
 
-        result_movie_ids = []
+        top_movies = []
         for idx, result in enumerate(results):
             if idx == top_n or result[1] == 0:
                 break
-            result_movie_ids.append(result[0])
+            top_movies.append(result)
 
-        if len(result_movie_ids) < top_n:
+        top_movies = self._bonus_score_for_contiguous_tokens(top_movies, query)
+
+        # Extend the query and search again if the top_n movies are not found enough
+        if len(top_movies) < top_n:
             new_query = self._extend_terms(query, num_extend_terms)
             results = self._search(new_query)
             for result in results:
-                if result[0] not in result_movie_ids:
-                    result_movie_ids.append(result[0])
-                if len(result_movie_ids) == top_n:
+                exists = any(result[0] == idx for idx, _ in top_movies)
+                if not exists:
+                    top_movies.append(result)
+                if len(top_movies) == top_n:
                     break
 
+        # Get the indices of the top movies
+        result_movie_ids = [movie_id for movie_id, _ in top_movies]
         return result_movie_ids

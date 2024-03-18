@@ -78,6 +78,7 @@ def show_search_results():
 
 
 def app():
+    st.snow()
     col1, col2, col3 = st.columns([1, 3, 1])
     image = Image.open('./assets/cine-search.png')
     with col1:

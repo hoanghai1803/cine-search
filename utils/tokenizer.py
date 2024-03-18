@@ -21,7 +21,7 @@ class Tokenizer:
             assert isinstance(stop_words, (list, set)), "Stop words must be a list or set."
             self.stop_words = set(stop_words)
 
-    def _lowercase_text(self, text):
+    def _lowercase_text(self, text: str) -> str:
         """
         Convert the text to lowercase.
 
@@ -33,7 +33,7 @@ class Tokenizer:
         """
         return text.lower()
 
-    def _remove_stop_words(self, text):
+    def _remove_stop_words(self, text: str) -> str:
         """
         Remove specified stop words from the text.
 
@@ -59,7 +59,7 @@ class Tokenizer:
         """
         return text.translate(str.maketrans('', '', string.punctuation))
 
-    def _stem_text(self, text):
+    def _stem_text(self, text: str) -> List[str]:
         """
         Stem words in the text using the Porter stemmer algorithm.
 
@@ -74,7 +74,7 @@ class Tokenizer:
         stemmed_words = [ps.stem(word) for word in words]
         return stemmed_words
 
-    def tokenize_text(self, text: str):
+    def tokenize_text(self, text: str) -> List[str]:
         """
         Normalize the text by applying lowercasing, tokenization, stop word removal, and stemming.
 
@@ -90,5 +90,5 @@ class Tokenizer:
 
         lowercased_text = self._lowercase_text(text)
         normalized_text = self._remove_punctuation(self._remove_stop_words(lowercased_text))
-        tokenized_text = self._stem_text(normalized_text)
-        return tokenized_text
+        tokenized_terms = self._stem_text(normalized_text)
+        return tokenized_terms
