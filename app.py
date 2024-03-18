@@ -7,6 +7,7 @@ import certifi
 import streamlit as st
 from dotenv import load_dotenv
 import os
+from openai import OpenAI
 
 from utils.cine import Cine
 
@@ -24,26 +25,50 @@ db = client["movies_data"]
 collection = db.movies
 cine = Cine(collection)
 
+api_key = os.getenv('GPT_API_KEY')
+chatgpt_client = OpenAI(api_key=api_key)
+
 results = []
 
 first_query = False
 
 
-def update_search_results(new_results):
+def translate_query(query):
+    completion = chatgpt_client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "system",
+                "content": "Given a query for movie/tv, translate it into English for the search engine. "
+                           "If the query is already in English, do nothing and just output it. Only returns the query"
+                           "not anything else."
+            },
+            {
+                "role": "user",
+                "content": query
+            }
+        ]
+    )
+
+    return completion.choices[0].message.content
+
+
+def update_search_results(query):
     global results, first_query
-    results = new_results
+    translated_query = translate_query(query)
+    results = cine.cine_search(translated_query)
     first_query = True
 
 
 def show_search_results():
     global results
     if len(results) > 0:
-        st.markdown("<h2 style='text-align: center; color: #fff; font-style: italic'>Results</h2>",
+        st.markdown("<h2 style='text-align: center; color: #fff'>Results</h2>",
                     unsafe_allow_html=True)
         for result in results:
             movie = collection.find_one({"movie_id": result})
             st.markdown(
-                f"<h3 style='text-align: center; color: #fff; font-style: italic'>{movie.get('movie_name', '')}</h3>",
+                f"<h3 style='text-align: center; color: #fff'>{movie.get('movie_name', '')}</h3>",
                 unsafe_allow_html=True)
             movie_image_link = movie.get('movie_image', '')
             if movie_image_link:
@@ -68,7 +93,23 @@ def show_search_results():
                 unsafe_allow_html=True)
             st.markdown(
                 f"<p style='text-align: center; color: #fff; font-style: italic'>"
-                f"Vote count: {movie.get('vote_count', '').replace('(', '').replace(')', '')}</p>",
+                f"Vote count: {movie['movie_metadata'].get('vote_count', '').replace('(', '').replace(')', '')}</p>",
+                unsafe_allow_html=True)
+            st.markdown(
+                f"<p style='text-align: center; color: #fff; font-style: italic'>"
+                f"Released day: {movie['movie_metadata'].get('released_date', '').replace('(', '').replace(')', '')}</p>",
+                unsafe_allow_html=True)
+            st.markdown(
+                f"<p style='text-align: center; color: #fff; font-style: italic'>"
+                f"Vote count: {movie['movie_metadata'].get('vote_count', '').replace('(', '').replace(')', '')}</p>",
+                unsafe_allow_html=True)
+            st.markdown(
+                f"<p style='text-align: center; color: #fff; font-style: italic'>"
+                f"Length: {movie['movie_metadata'].get('length', '').replace('(', '').replace(')', '')}</p>",
+                unsafe_allow_html=True)
+            st.markdown(
+                f"<p style='text-align: center; color: #fff; font-style: italic'>"
+                f"Film by age: {movie['movie_metadata'].get('film_by_age', '').replace('(', '').replace(')', '')}</p>",
                 unsafe_allow_html=True)
 
             st.markdown("<hr style='border-top: 1px solid #fff'>", unsafe_allow_html=True)
@@ -96,8 +137,7 @@ def app():
     query = st.text_input("Search movies or tv shows:", key="query_input")
 
     if query:
-        new_results = cine.cine_search(query)
-        update_search_results(new_results)
+        update_search_results(query)
 
     col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
 
@@ -116,8 +156,7 @@ def app():
     with col4:
         if st.button("Search"):
             if query:
-                new_results = cine.cine_search(query)
-                update_search_results(new_results)
+                update_search_results(query)
             else:
                 update_search_results([])
 

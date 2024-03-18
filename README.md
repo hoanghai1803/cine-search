@@ -64,7 +64,11 @@ Note:
 pip install -r requirements.txt
 ```
 
-4. Run the application:
+4. Database setup:
+
+Coming soon...
+
+5. Run the application:
 
 ```bash
 streamlit run app.py
