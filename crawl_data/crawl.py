@@ -6,11 +6,14 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import pymongo
 import certifi
-import re
 from traceback import print_exc
 from datetime import datetime, timedelta
 import psutil
-import logging
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 class Crawler:
 
@@ -22,7 +25,7 @@ class Crawler:
         if mongoConfig is not None:
             self.mongoConfig = mongoConfig
         else:
-            self.mongoConfig = {'username': 'admin', 'password': '4HhGbJ2R0lhimu8m', 'cluster': 'maincluster.bjppfkw.mongodb.net', 'options': {'retryWrites': 'true', 'w': 'majority'}}
+            self.mongoConfig = {'username': os.getenv('USERNAME'), 'password': os.getenv('PASSWORD'), 'cluster': os.getenv('CLUSTER'), 'options': {'retryWrites': 'true', 'w': 'majority'}}
 
     def initDB(self):
         username = self.mongoConfig['username']
